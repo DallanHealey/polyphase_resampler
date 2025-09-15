@@ -20,6 +20,7 @@ data = [1, 2, 3, 4, 5, 6]
 taps = [3, 4, 3]
 up = 3
 down = 2
+num_taps_col = int(len(taps) / up)
 
 assert(len(taps) % up == 0)
 
@@ -27,29 +28,30 @@ sci_samples = sig.upfirdn(taps, data, 3, 2)
 print(sci_samples)
 
 upsamples = []
-current_sample_list = [0]*1
-print(len(current_sample_list))
+current_sample_list = [0]*num_taps_col
 k = 0
+current_phase = [0]*up
 for i in range(0, len(data)):
     current_sample_list = [data[i]] + current_sample_list[0:len(current_sample_list)-1]
-    for j in range(0, len(taps), up):
-        print(current_sample_list, taps[j:j+up])
-        dot = np.multiply(current_sample_list, taps[j:j+up])
+    for j in range(0, num_taps_col):
+        for m in range(0, up):
+            current_phase[m] = 
+        # dot = np.multiply(current_sample_list, taps[j:j+up])
         
-        for d in dot:
-            print(k, d)
-            if (k < down-1):
-                upsamples.append(d)
-                k += 1
-            elif (k == down-1):
-                k = 0
+        # for d in dot:
+        #     print(k, d)
+        #     if (k < down-1):
+        #         upsamples.append(d)
+        #         k += 1
+        #     elif (k == down-1):
+        #         k = 0
         
-        print(upsamples)
+        # print(upsamples)
 
-if ((sci_samples == upsamples).all()):
-    print("Correct")
-else:
-    print("Incorrect")
+# if ((sci_samples == upsamples).all()):
+#     print("Correct")
+# else:
+#     print("Incorrect")
 
 # fig, [time, fft] = plt.subplots(2, 1)
 # time.plot(samples_iq)
