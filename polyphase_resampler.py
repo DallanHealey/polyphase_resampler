@@ -30,28 +30,24 @@ print(sci_samples)
 upsamples = []
 current_sample_list = [0]*num_taps_col
 k = 0
-current_phase = [0]*up
 for i in range(0, len(data)):
+    current_phase = [0]*up
     current_sample_list = [data[i]] + current_sample_list[0:len(current_sample_list)-1]
     for j in range(0, num_taps_col):
         for m in range(0, up):
-            current_phase[m] = 
-        # dot = np.multiply(current_sample_list, taps[j:j+up])
-        
-        # for d in dot:
-        #     print(k, d)
-        #     if (k < down-1):
-        #         upsamples.append(d)
-        #         k += 1
-        #     elif (k == down-1):
-        #         k = 0
-        
-        # print(upsamples)
+            current_phase[m] += current_sample_list[j]*taps[m]
+            if (k < down-1):
+                upsamples.append(current_phase[m])
+                k += 1
+            elif (k == down-1):
+                k = 0
 
-# if ((sci_samples == upsamples).all()):
-#     print("Correct")
-# else:
-#     print("Incorrect")
+print(upsamples)
+
+if ((sci_samples == upsamples).all()):
+    print("Correct")
+else:
+    print("Incorrect")
 
 # fig, [time, fft] = plt.subplots(2, 1)
 # time.plot(samples_iq)
