@@ -38,12 +38,14 @@ for i in range(0, len(data)+num_taps_col-1):
         for j in range(0, num_taps_col):
             current_phase[m] += current_sample_list[j]*taps[j*up+m]
         # print(m, current_phase[m])
-        if (k < down-1 or down == 1):
+        if (k == 0 or down == 1):
             # print("Adding", current_phase[m])
             upsamples.append(current_phase[m])
             k += 1
         elif (k == down-1):
             k = 0
+        else:
+            k += 1
 
 sci_samples = sig.upfirdn(taps, data, up, down)
 print("Scipy samples:", sci_samples)
