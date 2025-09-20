@@ -42,13 +42,12 @@ for i in range(0, len(data)+num_taps_col-1):
         current_sample_list = [0] + current_sample_list[0:len(current_sample_list)-1]
     else:    
         current_sample_list = [data[i]] + current_sample_list[0:len(current_sample_list)-1]
-    # print(current_sample_list)
+    
     for m in range(0, up):
         for j in range(0, num_taps_col):
             current_phase[m] += current_sample_list[j]*taps[j*up+m]
-        # print(m, current_phase[m])
+
         if (k == 0 or down == 1):
-            # print("Adding", current_phase[m])
             upsamples.append(current_phase[m])
             k += 1
         elif (k == down-1):
@@ -57,8 +56,6 @@ for i in range(0, len(data)+num_taps_col-1):
             k += 1
 
 sci_samples = sig.upfirdn(taps, data, up, down)
-# print("Scipy samples:", sci_samples)
-# print("My samples:", upsamples)
 
 if ((sci_samples == upsamples).all()):
     print("Correct")
@@ -70,10 +67,3 @@ else:
     print(up, down, num_taps_col)
     print("Scipy samples:", sci_samples)
     print("My samples:", upsamples)
-
-# fig, [time, fft] = plt.subplots(2, 1)
-# time.plot(samples_iq)
-# time.set_title("Time")
-# fft.plot(np.fft.fftshift(np.fft.fft(samples_iq)))
-# fft.set_title("FFT")
-# plt.show()
