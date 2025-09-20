@@ -16,33 +16,38 @@ import matplotlib.pyplot as plt
 
 # print(samples_iq)
 
-data = [1, 2, 3, 4, 5, 6]
-taps = [3, 4, 3]
+data = [1, 2, 3, 4]
+taps = [3, 2, 2]
 up = 3
 down = 2
 num_taps_col = int(len(taps) / up)
 
-assert(len(taps) % up == 0)
-
-sci_samples = sig.upfirdn(taps, data, 3, 2)
-print(sci_samples)
+assert len(taps) % up == 0, "Taps aren't a multiple of the up conversion rate"
 
 upsamples = []
 current_sample_list = [0]*num_taps_col
 k = 0
-for i in range(0, len(data)):
+for i in range(0, len(data)+num_taps_col-1):
     current_phase = [0]*up
-    current_sample_list = [data[i]] + current_sample_list[0:len(current_sample_list)-1]
-    for j in range(0, num_taps_col):
-        for m in range(0, up):
-            current_phase[m] += current_sample_list[j]*taps[m]
-            if (k < down-1):
-                upsamples.append(current_phase[m])
-                k += 1
-            elif (k == down-1):
-                k = 0
+    if i >= len(data):
+        current_sample_list = [0] + current_sample_list[0:len(current_sample_list)-1]
+    else:    
+        current_sample_list = [data[i]] + current_sample_list[0:len(current_sample_list)-1]
+    # print(current_sample_list)
+    for m in range(0, up):
+        for j in range(0, num_taps_col):
+            current_phase[m] += current_sample_list[j]*taps[j*up+m]
+        # print(m, current_phase[m])
+        if (k < down-1 or down == 1):
+            # print("Adding", current_phase[m])
+            upsamples.append(current_phase[m])
+            k += 1
+        elif (k == down-1):
+            k = 0
 
-print(upsamples)
+sci_samples = sig.upfirdn(taps, data, up, down)
+print("Scipy samples:", sci_samples)
+print("My samples:", upsamples)
 
 if ((sci_samples == upsamples).all()):
     print("Correct")
