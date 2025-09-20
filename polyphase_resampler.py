@@ -1,6 +1,13 @@
 import numpy as np
 import scipy.signal as sig
 import matplotlib.pyplot as plt
+from functools import reduce
+
+# Found on StackOverflow: https://stackoverflow.com/questions/6800193/what-is-the-most-efficient-way-of-finding-all-the-factors-of-a-number-in-python/
+def factors(n):
+    return set(reduce(
+        list.__add__,
+        ([i, n//i] for i in range(1, int(n**0.5) + 1) if n % i == 0)))
 
 # iq_file = open("test_file.iq", "r")
 # samples_i = []
@@ -16,10 +23,12 @@ import matplotlib.pyplot as plt
 
 # print(samples_iq)
 
-data = [1, 2, 3, 4]
-taps = [3, 2, 2]
-up = 3
-down = 2
+data = [np.random.randint(-2**16, 2**16)]*np.random.randint(low=1, high=10)
+num_taps = np.random.randint(1, 10)
+taps = sig.firwin(num_taps, 20, fs=80).astype(np.int32)
+fact = list(factors(len(taps)))
+up = fact[np.random.randint(0, len(fact))]
+down = np.random.randint(1, 10)
 num_taps_col = int(len(taps) / up)
 
 assert len(taps) % up == 0, "Taps aren't a multiple of the up conversion rate"
@@ -48,13 +57,19 @@ for i in range(0, len(data)+num_taps_col-1):
             k += 1
 
 sci_samples = sig.upfirdn(taps, data, up, down)
-print("Scipy samples:", sci_samples)
-print("My samples:", upsamples)
+# print("Scipy samples:", sci_samples)
+# print("My samples:", upsamples)
 
 if ((sci_samples == upsamples).all()):
     print("Correct")
 else:
     print("Incorrect")
+    print("Taps:", taps)
+    print("Data:", data)
+    print(num_taps)
+    print(up, down, num_taps_col)
+    print("Scipy samples:", sci_samples)
+    print("My samples:", upsamples)
 
 # fig, [time, fft] = plt.subplots(2, 1)
 # time.plot(samples_iq)
