@@ -24,8 +24,13 @@ logic                      sample_sr_valid;
 
 logic [31+NUM_COLS:0] current_phase[NUM_COLS][UP];
 logic [31+NUM_COLS:0] next_current_phase[NUM_COLS][UP];
-logic [1:0] phase_tracker;
-logic [1:0] next_phase_tracker;
+logic [UP-1:0] phase_tracker;
+
+initial begin
+    for (int i = 0; i < UP; i++) begin
+        phase_tracker[i] = i % DOWN == 'd0;
+    end
+end
 
 // Shift data in
 always @(posedge clk_1x) begin
@@ -33,7 +38,11 @@ always @(posedge clk_1x) begin
 
     if (sample_sr_valid == 1'b1) begin
         current_phase <= next_current_phase;
-        phase_tracker <= next_phase_tracker;
+        if (DOWN < UP) begin
+            phase_tracker <= (phase_tracker << DOWN-1) | (phase_tracker >> (UP-DOWN));
+        end else if (DOWN == UP) begin
+            phase_tracker <= phase_tracker;
+        end
     end
 
     if (sample_valid_i == 1'b1) begin
@@ -49,14 +58,11 @@ end
 
 always_comb begin
     next_current_phase = current_phase;
-    next_phase_tracker = phase_tracker;
 
     for (integer i = 0; i < NUM_COLS; i++) begin
         if (sample_sr_valid == 1'b1) begin
-            next_phase_tracker = phase_tracker + DOWN - 'd1;
-
             for (integer j = 0; j < UP; j++) begin
-                if ((j + phase_tracker) % DOWN == 'd0) begin
+                if (phase_tracker[j]) begin
                     next_current_phase[i][j] = sample_i_sr[i] * TAPS[i*UP+j];
                     $display("%d %d %d", sample_i_sr[i], TAPS[i*UP+j], next_current_phase[i][j]);
                 end
