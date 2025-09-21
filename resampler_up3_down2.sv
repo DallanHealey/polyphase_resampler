@@ -3,7 +3,7 @@ module resampler_up3_down2 # (
     logic [NUM_TAPS-1:0][15:0] TAPS = {NUM_TAPS{16'h0000}},
 
     integer UP   = 3,
-    integer DOWN = 2
+    integer DOWN = 5
 ) (
     input logic        clk_1x,
     input logic [15:0] sample_i_i,
@@ -17,6 +17,7 @@ module resampler_up3_down2 # (
 );
 
 localparam integer NUM_COLS = NUM_TAPS / UP;
+localparam integer NUM_PHASE_TRACKERS = 2;//$ceil(DOWN/UP);
 
 logic [NUM_COLS-1:0][15:0] sample_i_sr;
 logic [NUM_COLS-1:0][15:0] sample_q_sr;
@@ -24,11 +25,15 @@ logic                      sample_sr_valid;
 
 logic [31+NUM_COLS:0] current_phase[NUM_COLS][UP];
 logic [31+NUM_COLS:0] next_current_phase[NUM_COLS][UP];
-logic [UP-1:0] phase_tracker;
+logic [NUM_PHASE_TRACKERS*UP-1:0] phase_tracker;
 
 initial begin
-    for (int i = 0; i < UP; i++) begin
-        phase_tracker[i] = i % DOWN == 'd0;
+    for (int i = 0; i <= NUM_PHASE_TRACKERS*(UP-1); i++) begin
+        if (i > UP) begin
+            phase_tracker[i] = 1'b0;
+        end else begin
+            phase_tracker[i] = i % DOWN == 'd0;
+        end
     end
 end
 
@@ -42,6 +47,20 @@ always @(posedge clk_1x) begin
             phase_tracker <= (phase_tracker << DOWN-1) | (phase_tracker >> (UP-DOWN));
         end else if (DOWN == UP) begin
             phase_tracker <= phase_tracker;
+        end else if (DOWN > UP) begin
+            $display("DOWN > UP %b,%d,%d", phase_tracker,DOWN-1, DOWN-UP);
+            if (|phase_tracker[NUM_PHASE_TRACKERS*UP-1:UP] == 1'b1) begin
+                // If a 1 exists in the upper half of the phase tracker and it would be rolled over,
+                // we need to add 1 to the shift
+                for (int i = 0; i < DOWN-UP+1; i++) begin
+                    phase_tracker = {phase_tracker[NUM_PHASE_TRACKERS*UP-2:0], phase_tracker[NUM_PHASE_TRACKERS*UP-1]};
+                end
+            end else begin
+                // Otherwise, just shift normally
+                for (int i = 0; i < DOWN-UP; i++) begin
+                    phase_tracker = {phase_tracker[NUM_PHASE_TRACKERS*UP-2:0], phase_tracker[NUM_PHASE_TRACKERS*UP-1]};
+                end
+            end
         end
     end
 
