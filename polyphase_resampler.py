@@ -25,11 +25,11 @@ def dprint(*text):
         print(*text)
 
 if (args.debug == True):
-    data = [1, 2]
+    data = [1, 2, 3, 4]
     taps = [3, 4, 3]
     num_taps = len(taps)
     up = 3
-    down =2
+    down = 2
 else:
     data = [np.random.randint(-2**16, 2**16)]*np.random.randint(low=1, high=10)
     num_taps = np.random.randint(1, 10)

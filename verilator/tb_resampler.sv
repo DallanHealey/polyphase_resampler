@@ -13,6 +13,7 @@ logic        sample_valid_o;
 
 logic start;
 event samples_done;
+logic flip_flop;
 
 localparam CLK_1X_PERIOD = 10;
 always begin
@@ -26,8 +27,8 @@ always begin
     clk_1p5x <= !clk_1p5x;
 end
 
-localparam integer NUM_SAMPLES = 2;
-logic [0:NUM_SAMPLES-1][15:0] samples = {16'd1, 16'd2};
+localparam integer NUM_SAMPLES = 4;
+logic [0:NUM_SAMPLES-1][15:0] samples = {16'd1, 16'd2, 16'd3, 16'd4};
 localparam integer NUM_TAPS = 3;
 localparam logic [0:NUM_TAPS-1][15:0] taps = {16'd3, 16'd4, 16'd3};
 
@@ -38,6 +39,7 @@ initial begin
     clk_1x = 1'b0;
     clk_1p5x = 1'b0;
     start = 1'b0;
+    flip_flop = 1'b0;
     #10us;
 
     // Start sending samples
@@ -55,15 +57,19 @@ end
 integer sample_count;
 always @(posedge clk_1x) begin
     sample_valid_i <= 1'b0;
+    flip_flop <= !flip_flop;
 
     if (start == 1'b1) begin
-        sample_valid_i <= 1'b1;
-        sample_i_i <= samples[sample_count];
-        if (sample_count == NUM_SAMPLES - 1) begin
-            sample_count <= 0;
-            ->samples_done;
-        end else begin
-            sample_count <= sample_count + 1;
+        // Flip flop sending samples because I don't want to write a CDC BRAM right now
+        if (flip_flop == 1'b0) begin
+            sample_valid_i <= 1'b1;
+            sample_i_i <= samples[sample_count];
+            if (sample_count == NUM_SAMPLES - 1) begin
+                sample_count <= 0;
+                ->samples_done;
+            end else begin
+                sample_count <= sample_count + 1;
+            end
         end
     end
 end
